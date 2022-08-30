@@ -1,0 +1,87 @@
+# NPM Prod
+npm config set 
+registry=https://repository.ntrs.com:8444/nexus/content/groups/npm-group/
+npm config set strict-ssl false
+npm config set @types:registry=https://registry.npmjs.org
+npm config set @std:registry=https://registry.npmjs.org
+npm config set @ecc:registry 
+https://repository.ntrs.com:8444/nexus/content/repositories/npm-internal/
+npm config set proxy=http://:@http-proxy.ntrs.com:80/
+
+echo '==== Node Version ===='
+echo $(node --version)
+
+if [[ "${bamboo.repository.branch.name}" == "INSIP-1099-UXP-10" ]]; then
+    npm i -g @nt/xps@3.1.0
+else 
+    npm i -g @nt/xps@2.14.4
+fi
+
+echo '==== XPS Version ===='
+echo $(xps --version)
+
+yarn config set registry 
+https://repository.ntrs.com:8444/nexus/content/groups/npm-group/
+yarn config set proxy http://:@http-proxy.ntrs.com:80/
+
+------
+
+
+yarn cache clean
+# npm install
+yarn
+
+#cat yarn.lock
+#yarn build
+
+#yes | mv -f ./manifest.yml ./dist/manifest.yml
+
+#cat ./dist/manifest.yml
+
+
+-------
+
+export NODE_OPTIONS=--max_old_space_size=8192
+
+if [[ "${bamboo.repository.branch.name}" == "INSIP-1099-UXP-10" ]]; then
+    xps build --outputPath=./dist/build/ecc --skipAudit
+else
+    yarn build --skipAudit
+    
+    # check if build actually succeeded
+    echo '====BUILD HEALTH CHECK===='
+    actualsize=(`du --apparent-size -cs -B 1 dist | cut -f1`)
+    echo $actualsize
+    minimumsize=5000000
+    
+    if [ $actualsize -ge $minimumsize ]; then
+        echo Health check passed
+        exit 0
+    else
+        echo Health check failed, size is under $minimumsize bytes
+        exit 1
+    fi
+fi
+
+
+----
+
+
+sed -i "s/org.gradle.daemon=true/org.gradle.daemon=false/g" 
+gradle.properties
+chmod 777 gradlew
+./gradlew -Dorg.gradle.jvmargs=-Xmx2g -P 
+releaseLabel=${bamboo.releaseLabel} -P isRelease=${bamboo.isRelease} 
+publish
+
+ls -lat
+
+cd buildgradle/distributions
+
+ls -lat
+
+cd ../..
+
+
+mv buildgradle/distributions/${bamboo.cf.artifactid}-1.0-SNAPSHOT.zip 
+buildgradle/distributions/${bamboo.cf.artifactid}.zip

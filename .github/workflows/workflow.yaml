@@ -1,0 +1,39 @@
+name: Workflow Dispatc
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: 'code to validate access to deploy to sandbox environment'
+        required: true
+        
+env:
+  SHA: ${{ github.sha }}
+   
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Add SHORT_SHA env property with commit short sha
+        run: |
+          echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
+          echo "ACID=`echo https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}`" >> $GITHUB_ENV
+          echo "commit_url=`echo https://github.com/${{github.repository}}/commit/${GITHUB_SHA}`" >> $GITHUB_ENV
+          echo "commit_msg=`echo ${{github.event.head_commit.message}}`" >> $GITHUB_ENV
+      - name: 'Validate code'
+        env:
+          CODE_INPUT: ${{github.event.inputs.token}}
+          CODE: 1234
+        run: |
+            echo $CODE_INPUT
+            echo $SHA
+            echo $SHORT_SHA
+            echo $ACID
+            echo $commit_url
+            echo $commit_msg
+            if [[ "$CODE" -ne $"CODE_INPUT" ]]; then 
+             echo "Verification code did not match!  Aborting!"; 
+             exit 99;
+            else
+             echo hi $CODE  $CODE_INPUT
+            fi

@@ -1,0 +1,19 @@
+name: Workflow Dispatch on Input
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'version to deploy ({major}.{minor}.{patch}-build.{buildnumber}, eg: 1.0.0-build.93)'
+        required: true
+env:
+
+  NODE_VERSION: '14.x'
+
+jobs:
+  E2E-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: 'Resolve Project Dependencies Using Npm'
+      shell: bash
+      run: |
+           node -v 

@@ -1,0 +1,45 @@
+name: Conditional Workflow
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'tag'
+        required: true
+      SQL:
+        description: 'SQL'
+        required: true
+      SQLV:
+        description: 'SQLVersion'
+        
+env:
+  NODE_VERSION: '14.x' 
+  RUNNER: ${{ github.run_number }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+  
+    - name: 'if condition'
+      id: condition
+      if: github.event.inputs.SQL == 'true'
+      run: |
+        echo "True: ${{ github.event.inputs.SQL }}!"
+        
+    - name: 'else condition'
+      id: condifalse
+      if: github.event.inputs.SQL == 'false'
+      run: |
+        echo "False: ${{ github.event.inputs.SQL }}!"
+
+    - name: 'if condition not Null'
+      id: conditionNoNull
+      if: github.event.inputs.SQLV != ''
+      run: |
+        echo "RUn SQL ${{ github.event.inputs.SQLV }} "
+
+    - name: 'if condition is Null'
+      id: conditionisNull
+      if: github.event.inputs.SQLV == ''
+      run: |
+        echo "RUn only"
